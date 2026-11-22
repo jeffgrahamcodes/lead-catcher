@@ -1,0 +1,9 @@
+{
+  "name": "Full name of the person, e.g. 'Jenna Richards'. Use 'Unknown' if no name was given.",
+  "company": "Company name, e.g. 'Sadowski & Company'",
+  "company_website": "Company website domain, e.g. sadowskico.com. Empty string if not given.",
+  "role": "Their job title. 'Unknown' if not given.",
+  "email": "Their email address. Empty string if not given. Never invent one.",
+  "email_source": "Where the email came from, e.g. 'hunter (found)', 'hunter (inferred)', 'website'. Empty string if not given.",
+  "notes": "Why this is a qualified lead, plus any other useful context from the input"
+}

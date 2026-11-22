@@ -1,0 +1,299 @@
+{
+  "name": "RevOpsS-A",
+  "active": false,
+  "createdAt": "2026-11-19T23:45:07.503Z",
+  "updatedAt": "2026-11-21T00:17:00.888Z",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.sales_lead_description }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a RevOps assistant. The user will describe a sales lead in plain text. Your job is to turn that description into a clean, structured record that will be sent straight to Pipedrive to create an organization, a person and a lead.\n\nRules:\n- Only use information that appears in the input. Never invent names, emails, roles or companies.\n- If a field isn't in the input, use \"Unknown\" for name and role, and an empty string for everything else.\n- Write the person's full name in normal capitalization, e.g. \"Jenna Richards\".\n- For company_website, return just the domain, e.g. \"sadowskico.com\", with no \"https://\", \"www.\" or trailing slash.\n- Keep email exactly as given. Do not fix, guess or reformat it.\n- Copy email_source as given, e.g. \"hunter (found)\", \"hunter (inferred)\" or \"website\".\n- In notes, keep the reason this lead is qualified, plus any other useful context from the input, in 1 to 3 sentences.\n- If the input describes more than one lead, only use the first one."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "86ffb39b-439b-41d0-a341-05b351a72519",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        232,
+        232
+      ],
+      "id": "8880f470-1d5b-425b-930d-29954b232a4e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"name\": \"Full name of the person, e.g. 'Jenna Richards'. Use 'Unknown' if no name was given.\",\n  \"company\": \"Company name, e.g. 'Sadowski & Company'\",\n  \"company_website\": \"Company website domain, e.g. sadowskico.com. Empty string if not given.\",\n  \"role\": \"Their job title. 'Unknown' if not given.\",\n  \"email\": \"Their email address. Empty string if not given. Never invent one.\",\n  \"email_source\": \"Where the email came from, e.g. 'hunter (found)', 'hunter (inferred)', 'website'. Empty string if not given.\",\n  \"notes\": \"Why this is a qualified lead, plus any other useful context from the input\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        360,
+        232
+      ],
+      "id": "a96d41a2-3adb-4b38-85ae-303758c9b4a9",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "resource": "organization",
+        "name": "={{ $json.output.company }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "e26fab3d-ebd1-46b5-8b9e-16b21fef469c",
+      "name": "Create an organization",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "person",
+        "name": "={{ $('AI Agent').item.json.output.name }}",
+        "additionalFields": {
+          "emails": {
+            "emailProperties": [
+              {
+                "value": "={{ $('AI Agent').item.json.output.email }}"
+              }
+            ]
+          },
+          "org_id": "={{ $('Create an organization').item.json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "ff7e572c-80c5-4d5b-8220-11461e06de99",
+      "name": "Create a person",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "title": "={{ $('AI Agent').item.json.output.name }} - {{ $('AI Agent').item.json.output.company }}",
+        "organization_id": "={{ $('Create an organization').item.json.id }}",
+        "additionalFields": {
+          "person_id": "={{ $('Create a person').item.json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "1eccf7eb-be5c-4794-a3ba-c192555be6d6",
+      "name": "Create a lead",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "note",
+        "content": "=Why qualified: {{ $('AI Agent').item.json.output.notes || 'No notes provided' }}\nRole: {{ $('AI Agent').item.json.output.role }}\nEmail source: {{ $('AI Agent').item.json.output.email_source || 'unknown' }}\nWebsite: {{ $('AI Agent').item.json.output.company_website }}",
+        "additionalFields": {
+          "org_id": "={{ $('Create an organization').item.json.id }}",
+          "person_id": "={{ $('Create a person').item.json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "77ac0402-256a-47b7-abbb-f4e899dd6187",
+      "name": "Create a note",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Parse Data\nUse an Agent w/ structured  outputs",
+        "height": 560,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "b18b49cb-3080-449f-85c4-3ab884aec804",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Load Data\n**Store prospect's info in Pipedrive",
+        "height": 672,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "ddd6f1cd-07b5-4344-b6a3-a8eac9b83e51",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sales_lead_description"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "4fc42b26-6334-4b1e-a2e1-406ddf7506bf",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create an organization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an organization": {
+      "main": [
+        [
+          {
+            "node": "Create a person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a person": {
+      "main": [
+        [
+          {
+            "node": "Create a lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a lead": {
+      "main": [
+        [
+          {
+            "node": "Create a note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
