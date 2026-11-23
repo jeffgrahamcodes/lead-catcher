@@ -1,5 +1,5 @@
 {
-  "name": "Knowledge Lookup",
+  "name": "Knowledge Lookup Subagent",
   "nodes": [
     {
       "parameters": {

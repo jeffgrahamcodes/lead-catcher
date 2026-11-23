@@ -1,0 +1,204 @@
+{
+  "name": "Prospecting Subagent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You find sales prospects based on a query from the user, and respond with 5 qualified prospects.\n\nProcess:\n1. Use firecrawl_search to find candidate companies. Set limit to 5 and never include scrapeOptions.\n2. For each promising company, use the Hunter tool with the company's domain (e.g. acme.com) to find a real contact and email. Prefer owners, founders, directors and other decision makers.\n3. Only use firecrawl_scrape if you still need a detail, like what the company does or who runs it. Always set onlyMainContent to true and formats to [\"markdown\"]. Scrape one page at a time.\n\nRules:\n- Never guess or construct an email address. Only use emails returned by Hunter or found on a page.\n- If you cannot find an email for a prospect, leave it empty and still include the prospect if they're a strong fit.\n- Stop once you have 5 good prospects. Do not keep searching to improve the list.\n- Return 5 prospects from 5 different companies. One contact per company: the most senior decision maker you can find.\n- Focus on small, independent businesses (roughly under 20 staff). Exclude schools and large multi-location companies.\n- Never presume a role. If no source confirms it, write \"Unknown\".\n- Only use an email if its domain matches the company website, or it appears on the company's own contact page.\n- Do not claim an email is verified. Hunter results are \"found\", not verified.\n- In the rationale, cite a specific sign they'd benefit from an AI receptionist: phone-only booking, limited office hours, no online scheduling, or a \"call us\" contact page.\nBudget:\n- Start with ONE firecrawl_search with limit 10 to build a list of candidate companies. Pick the 5 best fits from that list before doing anything else.\n- Spend at most 2 tool calls per company. If Hunter finds nothing, use an email from the company's contact page, or leave email empty and move on.\n- If you cannot fill 5 strong prospects, return the ones you have. A shorter accurate list beats a full list of guesses.",
+          "maxIterations": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        0
+      ],
+      "id": "746a02d6-dae2-4ad4-82c8-e0f4209af495",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"prospects\": [\n    {\n      \"firstname\": \"Prospect's first name\",\n      \"lastname\": \"Prospect's last name\",\n      \"company\": \"Company name\",\n      \"company_website\": \"Company domain, e.g. acme.com\",\n      \"role\": \"Their job title\",\n      \"email\": \"Email found via Hunter or on a page. Empty string if none found. Never guessed.\",\n      \"email_source\": \"hunter, website, or none\",\n      \"source_url\": \"URL where the prospect info came from\",\n      \"rationale\": \"Why this prospect is qualified as a potential client\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        240
+      ],
+      "id": "d4667c2a-d490-4434-8544-d075eaac1645",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "include": "selected",
+        "includeTools": [
+          "firecrawl_scrape",
+          "firecrawl_search"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/mcp-registry.n8nConnectFirecrawl",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        240
+      ],
+      "id": "8ebc1a75-f944-4465-93f5-81f409525375",
+      "name": "Firecrawl MCP",
+      "credentials": {
+        "n8nConnectFirecrawlMcpAiGatewayApi": {
+          "id": "",
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "domain": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Domain', ``, 'string') }}",
+        "onlyEmails": false,
+        "limit": 5,
+        "filters": {
+          "seniority": [
+            "senior",
+            "executive"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.hunterTool",
+      "typeVersion": 1,
+      "position": [
+        496,
+        240
+      ],
+      "id": "398252a1-6de8-4fda-b8f1-ff02df506deb",
+      "name": "Hunter",
+      "credentials": {
+        "hunterApi": {
+          "id": "",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        240
+      ],
+      "id": "8dc16052-4e0e-45a1-950d-9acff3335ef6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4554eae4-1daf-4eef-9a6b-5fded504d770",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

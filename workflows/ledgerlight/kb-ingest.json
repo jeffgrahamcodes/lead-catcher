@@ -1,5 +1,5 @@
 {
-  "name": "KB Ingest",
+  "name": "KB Ingest Subagent",
   "nodes": [
     {
       "parameters": {
@@ -111,6 +111,7 @@
       "name": "Recursive Character Text Splitter"
     }
   ],
+  "pinData": {},
   "connections": {
     "On form submission": {
       "main": [
@@ -166,6 +167,5 @@
     "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
-  "tags": [],
-  "pinData": {}
+  "tags": []
 }
