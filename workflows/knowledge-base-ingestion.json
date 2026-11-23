@@ -1,77 +1,27 @@
 {
-  "name": "Data Ingestion",
-  "active": false,
-  "createdAt": "2026-11-15T14:55:07.830Z",
-  "updatedAt": "2026-11-15T15:34:18.108Z",
+  "name": "KB Ingest",
   "nodes": [
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ],
-      "id": "654546eb-23d1-4c5c-92e9-5cc06eb98fad",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
       "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "YOUR_GOOGLE_SHEET_ID",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "id"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        224,
-        0
-      ],
-      "id": "375e2fe8-919a-4a3d-92fe-1fdf0fbfa5cb",
-      "name": "Get row(s) in sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
+        "formTitle": "Knowledge Base",
+        "formFields": {
+          "values": [
             {
-              "id": "e4d83b2a-e70b-49c3-affe-80a64db2fb6a",
-              "name": "content",
-              "value": "=Product name: {{ $json.Name }}\nCategory: {{ $json.Category }}\nSKU: {{ $json.SKU }}\nPrice: ${{ $json.Price }}\nDescription: {{ $json.Description }}",
-              "type": "string"
-            },
-            {
-              "id": "8a67df93-cdd5-4fc2-99ab-6873b6a6d3bf",
-              "name": "category",
-              "value": "={{ $json.Category }}",
-              "type": "string"
+              "fieldLabel": "Knowledge Base",
+              "fieldType": "file"
             }
           ]
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
       "position": [
-        448,
+        0,
         0
       ],
-      "id": "f81c6f79-2b63-458b-a1a2-b481b36c6389",
-      "name": "Edit Fields"
+      "id": "a42eb023-1929-4b73-88af-635d468ae935",
+      "name": "On form submission"
     },
     {
       "parameters": {
@@ -87,10 +37,10 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.4,
       "position": [
-        672,
+        224,
         0
       ],
-      "id": "611c8f18-5895-456e-bd67-85712c7ed713",
+      "id": "14b8c268-0f21-4f48-a1b2-ee33aa6422a9",
       "name": "Supabase Vector Store",
       "credentials": {
         "supabaseApi": {
@@ -106,28 +56,30 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        680,
-        232
+        160,
+        224
       ],
-      "id": "8db6b9cf-49b5-4ed5-b668-e9f8acb1775e",
+      "id": "34fd1e42-d34f-4340-a8ca-0ad5f0a05d87",
       "name": "Embeddings OpenAI",
       "credentials": {
         "openAiApi": {
           "id": "",
-          "name": "OpenAI account"
+          "name": "",
+          "__aiGatewayManaged": true
         }
       }
     },
     {
       "parameters": {
-        "jsonMode": "expressionData",
-        "jsonData": "={{ $json.content }}",
+        "dataType": "binary",
+        "loader": "textLoader",
+        "textSplittingMode": "custom",
         "options": {
           "metadata": {
             "metadataValues": [
               {
-                "name": "category",
-                "value": "={{ $json.category }}"
+                "name": "source",
+                "value": "ledgerlight-kb"
               }
             ]
           }
@@ -136,37 +88,31 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        808,
-        232
+        352,
+        208
       ],
-      "id": "bdf5997b-e12e-41e4-a272-823f97ed56f9",
+      "id": "14a8e72a-7623-4df1-8d5a-c935fb22d748",
       "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        448,
+        416
+      ],
+      "id": "834b9da8-2160-46e0-bf06-91736d82246d",
+      "name": "Recursive Character Text Splitter"
     }
   ],
   "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Get row(s) in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get row(s) in sheet": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
+    "On form submission": {
       "main": [
         [
           {
@@ -198,11 +144,28 @@
           }
         ]
       ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "nodeGroups": [],
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
-  }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": [],
+  "pinData": {}
 }

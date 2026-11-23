@@ -37,19 +37,20 @@ flowchart LR
 
 | Path | What it is | Status |
 |---|---|---|
-| `workflows/knowledge-lookup-rag.json` | Webhook the voice agent calls to answer questions from the knowledge base (Gemini agent + Supabase vector store) | Working |
-| `workflows/knowledge-base-ingestion.json` | Loads FAQ rows from a Google Sheet into Supabase with OpenAI embeddings | Working |
+| `workflows/knowledge-lookup-rag.json` | Webhook the voice agent calls to answer questions from the knowledge base (OpenAI agent + Supabase vector store, header auth) | Working |
+| `workflows/knowledge-base-ingestion.json` | Upload form that splits a Markdown knowledge base on its headings and loads it into Supabase with OpenAI embeddings | Working |
 | `workflows/revops-subagent.json` | Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
-| `knowledge-base/` | The fictional business's services, hours and FAQ | Coming this week |
+| `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |
 
 ## Roadmap
 
 - [x] Live voice agent (ElevenLabs)
 - [x] Knowledge lookup over Supabase (RAG)
 - [x] RevOps subagent writing leads to Pipedrive
-- [ ] Header auth on every webhook
+- [x] Header auth on the knowledge lookup webhook
+- [ ] Header auth on every other webhook
 - [ ] `check_availability` (Google Calendar)
 - [ ] `book_appointment`
 - [ ] `log_lead` wired to the RevOps subagent
@@ -63,8 +64,8 @@ flowchart LR
 ## Setup
 
 1. In n8n, import each file in `workflows/` (Workflows → Import from File).
-2. Reconnect credentials on each node: OpenAI, Google Gemini, Supabase, Google Sheets and Pipedrive. Credential IDs were removed from the exports.
-3. In the ingestion workflow, point the Google Sheets node at your own sheet (`YOUR_GOOGLE_SHEET_ID`) and run it once to load the knowledge base.
+2. Reconnect credentials on each node: OpenAI, Supabase, Header Auth and Pipedrive. Credential IDs were removed from the exports.
+3. Run the ingestion workflow, open its form, and upload `knowledge-base/ledgerlight.md` (or your own business's file). Chunks are tagged `source: ledgerlight-kb` so they can be deleted and reloaded cleanly.
 4. Add header auth to each Webhook node before activating it.
 5. In ElevenLabs, create an agent and add each webhook as a tool, using the same header secret.
 

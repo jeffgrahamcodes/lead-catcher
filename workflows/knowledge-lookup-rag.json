@@ -1,38 +1,50 @@
 {
-  "name": "Agentic Rag w/ Voice",
-  "active": false,
-  "createdAt": "2026-11-15T23:53:51.431Z",
-  "updatedAt": "2026-11-16T00:21:08.438Z",
+  "name": "Knowledge Lookup",
   "nodes": [
     {
       "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.body.question }}",
+        "httpMethod": "POST",
+        "path": "knowledge-lookup",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
       "position": [
-        384,
+        0,
         0
       ],
-      "id": "4f42dcb5-b342-4764-a05a-6864fcd9b82a",
-      "name": "AI Agent"
+      "id": "47a37769-6a5b-4a8f-879b-34a1345c9b76",
+      "name": "Webhook",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Ledgerlight Webhook Key"
+        }
+      }
     },
     {
       "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.2,
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
       "position": [
-        328,
-        232
+        240,
+        240
       ],
-      "id": "f1433b18-56b9-44a5-8b7f-e585a96416f6",
-      "name": "Google Gemini Chat Model",
+      "id": "f49b184a-1417-438a-8d0c-a00fcd34d1e9",
+      "name": "OpenAI Chat Model",
       "credentials": {
-        "googlePalmApi": {
+        "openAiApi": {
           "id": "",
           "name": "",
           "__aiGatewayManaged": true
@@ -42,23 +54,22 @@
     {
       "parameters": {
         "mode": "retrieve-as-tool",
-        "toolDescription": "Use this tool to lookup product info that relates to products offered by the company",
+        "toolDescription": "Search Ledgerlight Tax & Advisory's knowledge base. Use it for any question about the firm: services and starting prices, office hours, location and parking, appointment types and how long they take, what to bring, policies (cancellations, payment, new clients, privacy), and common questions about taxes, IRS letters, bookkeeping and late returns. Always search before answering a question about the firm. If the search comes back with nothing relevant, say a team member will follow up instead of guessing.",
         "tableName": {
           "__rl": true,
           "value": "knowledgebase",
           "mode": "list",
           "cachedResultName": "knowledgebase"
         },
-        "topK": 10,
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.4,
       "position": [
-        584,
-        232
+        368,
+        240
       ],
-      "id": "0de34f03-777b-4324-bb72-edb3f0a39291",
+      "id": "590a124a-334a-456f-9fcb-eaaccc4ee589",
       "name": "Supabase Vector Store",
       "credentials": {
         "supabaseApi": {
@@ -74,33 +85,18 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        664,
-        440
+        448,
+        448
       ],
-      "id": "799fd179-b1b3-4783-ad78-15a4a1033772",
+      "id": "4affe761-f3dc-497e-ae6d-54534511afac",
       "name": "Embeddings OpenAI",
       "credentials": {
         "openAiApi": {
           "id": "",
-          "name": "OpenAI account"
+          "name": "",
+          "__aiGatewayManaged": true
         }
       }
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "knowledge-lookup",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.2,
-      "position": [
-        96,
-        0
-      ],
-      "id": "78093726-fb16-4528-adf9-678f2d6a4388",
-      "name": "Webhook"
     },
     {
       "parameters": {
@@ -109,15 +105,41 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        752,
+        720,
         0
       ],
-      "id": "bdb408f9-1acf-4aa5-a7e0-592f9626d80e",
+      "id": "9e18f6f6-0e48-41f3-8a69-9f74d05987c9",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.query }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        16
+      ],
+      "id": "f4e5d78f-da2f-4109-a936-222873fbd78c",
+      "name": "AI Agent"
     }
   ],
   "connections": {
-    "Google Gemini Chat Model": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
       "ai_languageModel": [
         [
           {
@@ -150,17 +172,6 @@
         ]
       ]
     },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "AI Agent": {
       "main": [
         [
@@ -173,9 +184,15 @@
       ]
     }
   },
-  "nodeGroups": [],
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
-  }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": [],
+  "pinData": {}
 }
