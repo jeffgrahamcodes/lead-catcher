@@ -1,5 +1,5 @@
 {
-  "name": "KB Ingest Subagent",
+  "name": "Ledgerlight: KB Ingest",
   "nodes": [
     {
       "parameters": {

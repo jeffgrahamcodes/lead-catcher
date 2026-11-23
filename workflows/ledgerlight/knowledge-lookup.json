@@ -1,5 +1,5 @@
 {
-  "name": "Knowledge Lookup Subagent",
+  "name": "Ledgerlight: Knowledge Lookup",
   "nodes": [
     {
       "parameters": {
