@@ -35,11 +35,20 @@ flowchart LR
 
 ## What's in this repo
 
+Workflows are grouped the same way as the n8n folders: one folder per client, plus `shared/` for subagents that more than one client or system calls.
+
+```
+workflows/
+├── ledgerlight/   ← everything specific to the Ledgerlight demo
+├── shared/        ← reusable subagents (RevOps today, Prospecting next)
+└── experiments/   ← earlier voice experiments, kept for reference
+```
+
 | Path | What it is | Status |
 |---|---|---|
-| `workflows/knowledge-lookup-rag.json` | Webhook the voice agent calls to answer questions from the knowledge base (OpenAI agent + Supabase vector store, header auth) | Working |
-| `workflows/knowledge-base-ingestion.json` | Upload form that splits a Markdown knowledge base on its headings and loads it into Supabase with OpenAI embeddings | Working |
-| `workflows/revops-subagent.json` | Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
+| `workflows/ledgerlight/knowledge-lookup.json` | Webhook the voice agent calls to answer questions from the knowledge base (OpenAI agent + Supabase vector store, header auth) | Working |
+| `workflows/ledgerlight/kb-ingest.json` | Upload form that splits a Markdown knowledge base on its headings and loads it into Supabase with OpenAI embeddings | Working |
+| `workflows/shared/revops-subagent.json` | Reusable across clients and the outbound sales agent. Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
 | `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |
@@ -63,7 +72,7 @@ flowchart LR
 
 ## Setup
 
-1. In n8n, import each file in `workflows/` (Workflows → Import from File).
+1. In n8n, import the files in `workflows/ledgerlight/` and `workflows/shared/` (Workflows → Import from File).
 2. Reconnect credentials on each node: OpenAI, Supabase, Header Auth and Pipedrive. Credential IDs were removed from the exports.
 3. Run the ingestion workflow, open its form, and upload `knowledge-base/ledgerlight.md` (or your own business's file). Chunks are tagged `source: ledgerlight-kb` so they can be deleted and reloaded cleanly.
 4. Add header auth to each Webhook node before activating it.
