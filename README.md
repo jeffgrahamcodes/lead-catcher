@@ -51,6 +51,7 @@ workflows/
 | `workflows/shared/revops-subagent.json` | Reusable across clients and the outbound sales agent. Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/shared/prospecting-subagent.json` | Finds 5 prospects for a query with Firecrawl search and Hunter, returning structured, sourced leads. Never guesses emails | Working |
 | `workflows/shared/sdr-subagent.json` | Reads people from Pipedrive and drafts a pitch email for each in Gmail. Drafts only, a person reviews and sends | Working |
+| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message and the `knowledge_lookup` tool | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
 | `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |
@@ -78,7 +79,7 @@ workflows/
 2. Reconnect credentials on each node: OpenAI, Supabase, Header Auth, Pipedrive, Hunter, Gmail and Firecrawl. Credential IDs were removed from the exports.
 3. Run the ingestion workflow, open its form, and upload `knowledge-base/ledgerlight.md` (or your own business's file). Chunks are tagged `source: ledgerlight-kb` so they can be deleted and reloaded cleanly.
 4. Add header auth to each Webhook node before activating it.
-5. In ElevenLabs, create an agent and add each webhook as a tool, using the same header secret.
+5. In ElevenLabs, create an agent from `elevenlabs/ledgerlight-receptionist.json` (or copy the prompt from `prompts/ledgerlight-receptionist.md`). Replace the placeholder webhook URL with your own, and point the `x-api-key` header at a workspace secret holding the same value as the n8n Header Auth credential.
 
 The ingestion workflow and the lookup workflow must use the **same OpenAI embedding model**, or retrieval quietly returns poor matches instead of erroring.
 
