@@ -51,7 +51,7 @@ workflows/
 | `workflows/shared/revops-subagent.json` | Reusable across clients and the outbound sales agent. Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/shared/prospecting-subagent.json` | Finds 5 prospects for a query with Firecrawl search and Hunter, returning structured, sourced leads. Never guesses emails | Working |
 | `workflows/shared/sdr-subagent.json` | Reads people from Pipedrive and drafts a pitch email for each in Gmail. Drafts only, a person reviews and sends | Working |
-| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message and the `knowledge_lookup` tool | Working |
+| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message, the `knowledge_lookup` and `end_call` tools, and the 7 data collection fields read after each call | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
 | `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |

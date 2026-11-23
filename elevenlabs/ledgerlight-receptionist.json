@@ -138,7 +138,23 @@
           "memory_entry_search": null,
           "run_subagent": null,
           "flag_issue_for_review": null,
-          "end_call": null,
+          "end_call": {
+            "type": "system",
+            "name": "end_call",
+            "description": "End the call only after you've confirmed any next step and thanked the caller, or when the caller clearly says goodbye.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": false,
+            "pre_tool_speech": "auto",
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          },
           "language_detection": null,
           "transfer_to_number": null,
           "skip_turn": null,
@@ -248,6 +264,23 @@
             },
             "follow_redirects": false,
             "follow_redirects_allowed_domains": []
+          },
+          {
+            "type": "system",
+            "name": "end_call",
+            "description": "End the call only after you've confirmed any next step and thanked the caller, or when the caller clearly says goodbye.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": false,
+            "pre_tool_speech": "auto",
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "params": {
+              "system_tool_type": "end_call"
+            }
           }
         ]
       }
@@ -290,7 +323,7 @@
       "shareable_page_text": null,
       "shareable_page_show_terms": true,
       "terms_text": "#### Terms and conditions\n\nBy clicking \"Agree,\" and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.",
-      "terms_html": null,
+      "terms_html": "<h4>Terms and conditions</h4>\n<p>By clicking &quot;Agree,&quot; and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.</p>\n",
       "terms_key": null,
       "show_avatar_when_collapsed": false,
       "disable_banner": false,
@@ -397,11 +430,245 @@
       "language_presets": {},
       "first_message_quick_replies": []
     },
-    "data_collection": {},
-    "data_collection_scopes": {},
+    "data_collection": {
+      "aitem_4201m836704tefashfa0fwv6ybea": {
+        "type": "string",
+        "description": "Caller's full name",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "caller_name",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_9301m8367p5sf8dafvxpcv0czbxm": {
+        "type": "string",
+        "description": "Best callback number",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "caller_phone",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_1601m8368a8eefz9ad31r9pzgnkn": {
+        "type": "string",
+        "description": "Email address as confirmed on the call",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "caller_email",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_8801m8368zykfbhs7ys935nfqkmz": {
+        "type": "string",
+        "description": "What they need help with, in one sentence",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "reason",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_3201m8369w6fe9ermhb0tp5d6d1d": {
+        "type": "boolean",
+        "description": "True if they're not an existing client",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "new_client",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_4901m836ahhsevev7sg6sjcs3nky": {
+        "type": "boolean",
+        "description": "True if an appointment was booked",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "booked",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      },
+      "aitem_9801m836b6b3fkxahdcvpgq7b2rz": {
+        "type": "boolean",
+        "description": "True if they mentioned an IRS deadline within 7 days",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "urgent",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
+      }
+    },
+    "data_collection_scopes": {
+      "aitem_4201m836704tefashfa0fwv6ybea": "conversation",
+      "aitem_9301m8367p5sf8dafvxpcv0czbxm": "conversation",
+      "aitem_1601m8368a8eefz9ad31r9pzgnkn": "conversation",
+      "aitem_8801m8368zykfbhs7ys935nfqkmz": "conversation",
+      "aitem_3201m8369w6fe9ermhb0tp5d6d1d": "conversation",
+      "aitem_4901m836ahhsevev7sg6sjcs3nky": "conversation",
+      "aitem_9801m836b6b3fkxahdcvpgq7b2rz": "conversation"
+    },
     "analysis_items": {
       "evaluation_criteria": [],
-      "data_collection": []
+      "data_collection": [
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_4201m836704tefashfa0fwv6ybea",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_9301m8367p5sf8dafvxpcv0czbxm",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_1601m8368a8eefz9ad31r9pzgnkn",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_8801m8368zykfbhs7ys935nfqkmz",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_3201m8369w6fe9ermhb0tp5d6d1d",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_4901m836ahhsevev7sg6sjcs3nky",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_9801m836b6b3fkxahdcvpgq7b2rz",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        }
+      ]
     },
     "overrides": {
       "conversation_config_override": {
