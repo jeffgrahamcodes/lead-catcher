@@ -112,7 +112,7 @@
         "start": "={{ $('Webhook').item.json.body.start }}",
         "end": "={{ DateTime.fromISO($('Webhook').item.json.body.start).plus({ minutes: Number($('Webhook').item.json.body.duration_minutes) }).toISO() }}",
         "additionalFields": {
-          "description": "=Phone: {{ $('Webhook').item.json.body.caller_phone }} Email: {{ $('Webhook').item.json.body.caller_email }} Reason: {{ $('Webhook').item.json.body.reason }} Booked by: Sarah (AI receptionist)",
+          "description": "=Phone: {{ $('Webhook').item.json.body.caller_phone }} \nEmail: {{ $('Webhook').item.json.body.caller_email }} \nReason: {{ $('Webhook').item.json.body.reason }} \nBooked by: Sarah (AI receptionist)",
           "summary": "={{ $('Webhook').item.json.body.appointment_type }} - {{ $('Webhook').item.json.body.caller_name }}"
         }
       },

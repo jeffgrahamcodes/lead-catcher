@@ -376,7 +376,6 @@
                   "appointment_type",
                   "caller_name",
                   "caller_phone",
-                  "caller_email",
                   "reason"
                 ],
                 "properties": {
