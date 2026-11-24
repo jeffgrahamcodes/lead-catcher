@@ -808,6 +808,31 @@
             "idle_secs": 900
           }
         }
+      },
+      "aitem_7701m87tm593f068bntvswafyjnx": {
+        "type": "boolean",
+        "description": "True if the caller asked to speak with a person or asked for a callback",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values": null,
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false,
+        "non_sensitive_value": null,
+        "name": "wants_callback",
+        "llm": null,
+        "llm_billed": false,
+        "analysis_schedule": {
+          "session": {
+            "mode": "on_session_end",
+            "delay_secs": null
+          },
+          "messaging": {
+            "mode": "after_idle",
+            "idle_secs": 900
+          }
+        }
       }
     },
     "data_collection_scopes": {
@@ -817,7 +842,8 @@
       "aitem_8801m8368zykfbhs7ys935nfqkmz": "conversation",
       "aitem_3201m8369w6fe9ermhb0tp5d6d1d": "conversation",
       "aitem_4901m836ahhsevev7sg6sjcs3nky": "conversation",
-      "aitem_9801m836b6b3fkxahdcvpgq7b2rz": "conversation"
+      "aitem_9801m836b6b3fkxahdcvpgq7b2rz": "conversation",
+      "aitem_7701m87tm593f068bntvswafyjnx": "conversation"
     },
     "analysis_items": {
       "evaluation_criteria": [],
@@ -867,6 +893,13 @@
         {
           "source": "user",
           "analysis_item_id": "aitem_9801m836b6b3fkxahdcvpgq7b2rz",
+          "version_id": "latest",
+          "scope": "conversation",
+          "run_conditions": null
+        },
+        {
+          "source": "user",
+          "analysis_item_id": "aitem_7701m87tm593f068bntvswafyjnx",
           "version_id": "latest",
           "scope": "conversation",
           "run_conditions": null
