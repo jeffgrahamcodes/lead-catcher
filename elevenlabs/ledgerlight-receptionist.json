@@ -956,7 +956,7 @@
     "workspace_overrides": {
       "conversation_initiation_client_data_webhook": null,
       "webhooks": {
-        "post_call_webhook_id": null,
+        "post_call_webhook_id": "YOUR_POST_CALL_WEBHOOK_ID",
         "events": [
           "transcript"
         ],

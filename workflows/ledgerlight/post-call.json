@@ -1,0 +1,449 @@
+{
+  "name": "Ledgerlight: Post-Call",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "post-call",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "28b37a4e-10ab-4b9c-abe9-9a8af7668af2",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json.body.data;\nconst dc = d.analysis?.data_collection_results || {};\nconst entries = Object.entries(dc);\n\nconst IDS = {\n  caller_name: 'aitem_4201m836704tefashfa0fwv6ybea',\n  caller_phone: 'aitem_9301m8367p5sf8dafvxpcv0czbxm',\n  caller_email: 'aitem_1601m8368a8eefz9ad31r9pzgnkn',\n  reason: 'aitem_8801m8368zykfbhs7ys935nfqkmz',\n  new_client: 'aitem_3201m8369w6fe9ermhb0tp5d6d1d',\n  booked: 'aitem_4901m836ahhsevev7sg6sjcs3nky',\n  urgent: 'aitem_9801m836b6b3fkxahdcvpgq7b2rz',\n  wants_callback: 'aitem_7701m87tm593f068bntvswafyjnx',\n};\n\nconst find = k =>\n  dc[k] ?? dc[IDS[k]] ??\n  entries.find(([id, e]) =>\n    [e?.data_collection_id, e?.name, e?.identifier].includes(k) ||\n    [e?.data_collection_id, e?.name, e?.identifier].includes(IDS[k]))?.[1];\n\nconst val = k => find(k)?.value ?? null;\nconst bool = k => [true, 'true'].includes(val(k));\n\nconst callerId = d.conversation_initiation_client_data?.dynamic_variables?.system__caller_id || '';\n\nconst transcript = (d.transcript || [])\n  .filter(t => t.message)\n  .map(t => `${t.role === 'agent' ? 'Sarah' : 'Caller'}: ${t.message}`)\n  .join('\\n');\n\nconst name = val('caller_name') || '';\nconst phone = val('caller_phone') || callerId;\nconst urgent = bool('urgent');\nconst wants_callback = bool('wants_callback');\nconst booked = bool('booked');\nconst new_client = bool('new_client');\n\nreturn [{ json: {\n  conversation_id: d.conversation_id,\n  duration_secs: d.metadata?.call_duration_secs ?? 0,\n  name, phone,\n  email: val('caller_email') || '',\n  reason: val('reason') || '',\n  new_client, booked, urgent, wants_callback,\n  hot: urgent || wants_callback || (new_client && !booked),\n  real_caller: Boolean(name || phone),\n  transcript,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ba0b7d1c-28c1-4bbd-a4ce-db4ef454d763",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "9f16b041-587f-43d0-9f72-d4bf72371ede",
+              "leftValue": "={{ $json.real_caller }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7997d189-241c-4c81-a976-1ab196f3cf36",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You write after-hours call summaries for the owner of a small CPA firm, who reads them on their phone first thing in the morning. Write 2 to 4 short sentences in plain text: who called, what they need, what happened on the call (booked, question answered, wants a callback), and the one next step for the firm. If there's an IRS deadline, lead with it. No greetings, no markdown, nothing that isn't in the transcript."
+            },
+            {
+              "content": "={{ $json.transcript }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoning": {
+            "reasoningOptions": {
+              "effort": "low"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "88bc81f3-148f-47fb-9d41-dcab82ae10d5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "person",
+        "name": "={{ $('Code in JavaScript').item.json.name || 'Unknown caller' }}",
+        "additionalFields": {
+          "emails": {
+            "emailProperties": [
+              {
+                "value": "={{ $('Code in JavaScript').item.json.email }}",
+                "label": "home"
+              }
+            ]
+          },
+          "phones": {
+            "phoneProperties": [
+              {
+                "value": "={{ $('Code in JavaScript').item.json.phone }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "9d39146f-532c-4446-96ba-7398e8fb20e8",
+      "name": "Create a person",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "mYiIOEiqJnBWlZK2",
+          "name": "Pipedrive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "title": "={{ $('Code in JavaScript').item.json.name || 'Unknown caller' }} - {{ $('Code in JavaScript').item.json.reason || 'After-hours call' }}",
+        "associateWith": "person",
+        "person_id": "={{ $json.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -96
+      ],
+      "id": "cb958303-b1c0-4f2a-84e7-9d70c9a82238",
+      "name": "Create a lead",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "mYiIOEiqJnBWlZK2",
+          "name": "Pipedrive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "note",
+        "content": "=After-hours call summary:\n{{ $('Message a model').item.json.output[0].content[0].text }}\n\nBooked: {{ $('Code in JavaScript').item.json.booked ? 'Yes' : 'No' }}\nCall length: {{ $('Code in JavaScript').item.json.duration_secs }} seconds\nConversation ID: {{ $('Code in JavaScript').item.json.conversation_id }}",
+        "additionalFields": {
+          "person_id": "={{ $('Create a person').item.json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        -96
+      ],
+      "id": "f9799e5a-8ef3-4e26-8134-04bb755d5895",
+      "name": "Create a note",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "mYiIOEiqJnBWlZK2",
+          "name": "Pipedrive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "0802fa05-836e-41b7-a6d8-43162672bb61",
+              "leftValue": "={{ $('Code in JavaScript').item.json.hot }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1712,
+        -96
+      ],
+      "id": "45048379-b911-4521-ac84-5a6f486c52c8",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "l38MUDh5E2icwx33",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/l38MUDh5E2icwx33",
+          "cachedResultName": "Ledgerlight: Notify Owner"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "urgent": "={{ $('Code in JavaScript').item.json.urgent }}",
+            "wants_callback": "={{ $('Code in JavaScript').item.json.wants_callback }}",
+            "booked": "={{ $('Code in JavaScript').item.json.booked }}",
+            "name": "={{ $('Code in JavaScript').item.json.name }}",
+            "phone": "={{ $('Code in JavaScript').item.json.phone }}",
+            "email": "={{ $('Code in JavaScript').item.json.email }}",
+            "reason": "={{ $('Code in JavaScript').item.json.reason }}",
+            "summary": "={{ $('Message a model').item.json.output[0].content[0].text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "urgent",
+              "displayName": "urgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "wants_callback",
+              "displayName": "wants_callback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "booked",
+              "displayName": "booked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1936,
+        -192
+      ],
+      "id": "6f8548e1-dab9-4b44-bc02-38f836e71a78",
+      "name": "Call 'Ledgerlight: Notify Owner'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a person": {
+      "main": [
+        [
+          {
+            "node": "Create a lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a lead": {
+      "main": [
+        [
+          {
+            "node": "Create a note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a note": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Call 'Ledgerlight: Notify Owner'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ed67f72d-5621-45bf-b119-0b7e7ee1b272",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "PKwEFZDRRe2eOvRi",
+  "tags": []
+}
