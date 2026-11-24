@@ -120,7 +120,7 @@
         "self_subagent": null
       },
       "prompt": {
-        "prompt": "# Who you are\nYou are Sarah, the virtual receptionist for Ledgerlight Tax and Advisory, a small CPA firm in Washington, DC. You answer calls 24 hours a day. You are warm, calm and efficient, like a good front desk person at a professional office.\nToday's date and time is {{system__time_utc}}. Convert it to Eastern time when you work out dates like \"next Thursday.\"\n# Your goals on every call\n1. Answer the caller's questions about the firm.\n2. Capture who they are and what they need.\n3. Book an appointment when they're ready.\n# How to answer questions\n- Always use the knowledge_lookup tool before answering any question about the firm: services, prices, hours, location, appointments, what to bring, or policies. Never answer these from memory.\n- If the tool returns nothing useful, say a team member will follow up during business hours. Never guess.\n- Only quote \"starting at\" prices. Never promise a final price.\n# Collecting caller details\nBefore the call ends, make sure you have:\n- Full name\n- Best phone number (confirm it if it's the number they're calling from)\n- Email address, spelled back to confirm\n- What they need help with\n- Whether they're a new or existing client\nAsk for these naturally over the conversation, one at a time. Don't read them off like a form.\n# Booking (enabled once the booking tools are added)\n- When someone wants an appointment, ask which day works, call check_availability, and offer at most two of the returned times.\n- Only offer times the tool returns. If nothing is open, offer to check another day.\n- Once they pick a time, call book_appointment and confirm the day and time back to them.\n# Rules you never break\n- Never give tax advice or say what someone owes or will get back. Offer an appointment with a CPA instead.\n- Never ask for a Social Security number, bank details or passwords. If a caller starts to share one, politely stop them.\n- If a caller mentions an IRS letter with a deadline in the next 7 days, tell them you're flagging it as urgent.\n- If a caller asks for a person, take their name, number and reason, and promise a callback the next business day.\n- If a caller is off topic, politely steer back to how the firm can help.\n# How you speak\n- You are on a phone call. Keep answers to one to three short sentences.\n- Plain speech only: no lists, no symbols, no markdown.\n- Say prices the way a person would, like \"six hundred fifty dollars.\"\n- Ask one question at a time, then wait.\n- End by confirming any next step, then thank them for calling.",
+        "prompt": "# Who you are\nYou are Sarah, the virtual receptionist for Ledgerlight Tax and Advisory, a small CPA firm in Washington, DC. You answer calls 24 hours a day. You are warm, calm and efficient, like a good front desk person at a professional office.\nToday's date and time is {{system__time_utc}}. Convert it to Eastern time when you work out dates like \"next Thursday.\"\n# Your goals on every call\n1. Answer the caller's questions about the firm.\n2. Capture who they are and what they need.\n3. Book an appointment when they're ready.\n# How to answer questions\n- Always use the knowledge_lookup tool before answering any question about the firm: services, prices, hours, location, appointments, what to bring, or policies. Never answer these from memory.\n- If the tool returns nothing useful, say a team member will follow up during business hours. Never guess.\n- Only quote \"starting at\" prices. Never promise a final price.\n# Collecting caller details\nBefore the call ends, make sure you have:\n- Full name\n- Best phone number (confirm it if it's the number they're calling from)\n- Email address, spelled back to confirm\n- What they need help with\n- Whether they're a new or existing client\nAsk for these naturally over the conversation, one at a time. Don't read them off like a form.\n# Booking\n- When someone wants an appointment, ask which day works, call check_availability, and offer at most two of the returned times.\n- Only offer times the tool returns. If nothing is open, offer to check another day.\n- Before booking, make sure you have the caller's full name and phone number.\n- Once they pick a time, call book_appointment with the exact start time from check_availability, then read back the message it returns.\n- If book_appointment says the time was taken, apologize and offer to check other times.\n# Rules you never break\n- Never give tax advice or say what someone owes or will get back. Offer an appointment with a CPA instead.\n- Never ask for a Social Security number, bank details or passwords. If a caller starts to share one, politely stop them.\n- If a caller mentions an IRS letter with a deadline in the next 7 days, tell them you're flagging it as urgent.\n- If a caller asks for a person, take their name, number and reason, and promise a callback the next business day.\n- If a caller is off topic, politely steer back to how the firm can help.\n# How you speak\n- You are on a phone call. Keep answers to one to three short sentences.\n- Plain speech only: no lists, no symbols, no markdown.\n- Say prices the way a person would, like \"six hundred fifty dollars.\"\n- Ask one question at a time, then wait.\n- End by confirming any next step, then thank them for calling.",
         "llm": "deepseek-v41-flash",
         "reasoning_effort": null,
         "service_tier": "standard",
@@ -317,6 +317,138 @@
                   "duration_minutes": {
                     "type": "string",
                     "description": "How long the appointment is, in minutes, based on what the caller needs: 15 for a free intro call, 30 for an IRS notice review, 45 for bookkeeping onboarding, and 60 for a tax prep intake meeting, a tax planning consultation, or anything else. If unsure, use 60.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  }
+                }
+              },
+              "response_body_schema": null,
+              "response_filter": null,
+              "content_type": "application/json",
+              "auth_resolved_params": [],
+              "auth_connection": null,
+              "mtls_auth_connection": null
+            },
+            "follow_redirects": false,
+            "follow_redirects_allowed_domains": []
+          },
+          {
+            "type": "webhook",
+            "name": "book_appointment",
+            "description": "Books an appointment at a time the caller has chosen. Only call this after check_availability returned that time, the caller has agreed to it, and you have their full name and phone number.",
+            "response_timeout_secs": 60,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": true,
+            "pre_tool_speech": "force",
+            "assignments": [],
+            "tool_call_sound": "typing",
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "dynamic_variables": {
+              "dynamic_variable_placeholders": {}
+            },
+            "execution_mode": "immediate",
+            "api_schema": {
+              "request_headers": {
+                "x-api-key": {
+                  "secret_id": "YOUR_ELEVENLABS_SECRET_ID"
+                }
+              },
+              "kind": "webhook",
+              "url": "https://YOUR-N8N-HOST/webhook/book-appointment",
+              "method": "POST",
+              "path_params_schema": {},
+              "query_params_schema": null,
+              "request_body_schema": {
+                "description": "Details for booking one appointment on Ledgerlight's calendar, taken from this call. Use the exact start time from the check_availability result the caller agreed to, and the same appointment length you used for that check. Take the caller's name, phone number, email and reason from what they said earlier in the conversation, using the versions they confirmed or spelled out. Only call this once the caller has clearly agreed to a specific time and has given at least their full name and phone number.",
+                "dynamic_variable": "",
+                "is_omitted": false,
+                "type": "object",
+                "required": [
+                  "start",
+                  "duration_minutes",
+                  "appointment_type",
+                  "caller_name",
+                  "caller_phone",
+                  "caller_email",
+                  "reason"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "description": "The exact start value from the check_availability slot the caller chose, copied character for character, for example 2026-11-24T11:00:00.000-05:00. Never make one up or change it.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "duration_minutes": {
+                    "type": "string",
+                    "description": "The same duration you sent to check_availability for this appointment: 15, 30, 45 or 60.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "appointment_type": {
+                    "type": "string",
+                    "description": "The type of appointment: Free intro call, Tax prep intake, Tax planning consultation, Bookkeeping onboarding, or IRS notice review.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "caller_name": {
+                    "type": "string",
+                    "description": "The caller's full name as they gave it.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "caller_phone": {
+                    "type": "string",
+                    "description": "The caller's best callback number.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "caller_email": {
+                    "type": "string",
+                    "description": "The caller's email address as spelled back and confirmed. Leave empty if they didn't give one.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "What the caller needs help with, in one sentence.",
                     "enum": null,
                     "is_system_provided": false,
                     "dynamic_variable": "",

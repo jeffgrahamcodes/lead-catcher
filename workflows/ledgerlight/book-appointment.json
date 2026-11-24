@@ -1,0 +1,240 @@
+{
+  "name": "Ledgerlight: Book Appointment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "book-appointment",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "395938f9-fb8a-4696-bdf6-d455930eb974",
+      "name": "Webhook",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Ledgerlight Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Ledgerlight"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $json.body.start }}",
+        "timeMax": "={{ DateTime.fromISO($json.body.start).plus({ minutes: Number($json.body.duration_minutes) }).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "28bd4ce0-33c6-4873-9b63-88593207284b",
+      "name": "Get many events",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const taken = $input.all().some(i => i.json.start);\nreturn [{ json: { free: !taken } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "08522cf1-8a48-48db-8f08-d81d4fe40636",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b08e66d5-15e8-41c0-8ef0-b19038b7c108",
+              "leftValue": "={{ $json.free }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "af48f11f-896a-410c-a84b-43be04c47c39",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Ledgerlight"
+        },
+        "start": "={{ $('Webhook').item.json.body.start }}",
+        "end": "={{ DateTime.fromISO($('Webhook').item.json.body.start).plus({ minutes: Number($('Webhook').item.json.body.duration_minutes) }).toISO() }}",
+        "additionalFields": {
+          "description": "=Phone: {{ $('Webhook').item.json.body.caller_phone }} Email: {{ $('Webhook').item.json.body.caller_email }} Reason: {{ $('Webhook').item.json.body.reason }} Booked by: Sarah (AI receptionist)",
+          "summary": "={{ $('Webhook').item.json.body.appointment_type }} - {{ $('Webhook').item.json.body.caller_name }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.4,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "26c552d3-23a9-4414-ac80-2ab92ac2093a",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { booked: true, message: \"You're all set for \" + DateTime.fromISO($('Webhook').item.json.body.start, { zone: 'America/New_York' }).toFormat(\"cccc, LLLL d 'at' h:mm a\") + \".\" } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "2a00b564-6ab4-41bf-a671-272bfbc02dce",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { booked: false, message: \"That time was just taken. Would you like me to check other times?\" } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        96
+      ],
+      "id": "d702e601-348d-400e-8484-d4b3a60163c2",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

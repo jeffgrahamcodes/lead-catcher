@@ -49,10 +49,11 @@ workflows/
 | `workflows/ledgerlight/knowledge-lookup.json` | Webhook the voice agent calls to answer questions from the knowledge base (OpenAI agent + Supabase vector store, header auth) | Working |
 | `workflows/ledgerlight/kb-ingest.json` | Upload form that splits a Markdown knowledge base on its headings and loads it into Supabase with OpenAI embeddings | Working |
 | `workflows/ledgerlight/check-availability.json` | Webhook the voice agent calls with a date and appointment length. Reads Google Calendar and returns up to 3 open slots within office hours, with a spoken version of each time | Working |
+| `workflows/ledgerlight/book-appointment.json` | Books the slot the caller chose. Re-checks the calendar first so two callers can't take the same time, then creates the event and returns a confirmation Sarah reads back | Working |
 | `workflows/shared/revops-subagent.json` | Reusable across clients and the outbound sales agent. Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/shared/prospecting-subagent.json` | Finds 5 prospects for a query with Firecrawl search and Hunter, returning structured, sourced leads. Never guesses emails | Working |
 | `workflows/shared/sdr-subagent.json` | Reads people from Pipedrive and drafts a pitch email for each in Gmail. Drafts only, a person reviews and sends | Working |
-| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message, the `knowledge_lookup`, `check_availability` and `end_call` tools, and the 7 data collection fields read after each call | Working |
+| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message, the `knowledge_lookup`, `check_availability`, `book_appointment` and `end_call` tools, and the 7 data collection fields read after each call | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
 | `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |
@@ -65,7 +66,7 @@ workflows/
 - [x] Header auth on the knowledge lookup webhook
 - [ ] Header auth on every other webhook
 - [x] `check_availability` (Google Calendar)
-- [ ] `book_appointment`
+- [x] `book_appointment`
 - [ ] `log_lead` wired to the RevOps subagent
 - [ ] `notify_owner` for hot leads
 - [ ] Post-call summary from the ElevenLabs transcript
