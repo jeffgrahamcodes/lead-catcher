@@ -170,7 +170,7 @@
     {
       "parameters": {
         "resource": "note",
-        "content": "=After-hours call summary:\n{{ $('Message a model').item.json.output[0].content[0].text }}\n\nBooked: {{ $('Code in JavaScript').item.json.booked ? 'Yes' : 'No' }}\nCall length: {{ $('Code in JavaScript').item.json.duration_secs }} seconds\nConversation ID: {{ $('Code in JavaScript').item.json.conversation_id }}",
+        "content": "=After-hours call summary: {{ $('Message a model').item.json.output[0].content[0].text }}\nBooked: {{ $('Code in JavaScript').item.json.booked ? 'Yes' : 'No' }}\nCall length: {{ $('Code in JavaScript').item.json.duration_secs }} seconds\nConversation ID: {{ $('Code in JavaScript').item.json.conversation_id }}",
         "additionalFields": {
           "person_id": "={{ $('Create a person').item.json.id }}"
         }
@@ -439,7 +439,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "ed67f72d-5621-45bf-b119-0b7e7ee1b272",
+  "versionId": "1f178bbd-b674-4372-bab1-5c879811371c",
   "meta": {
     "templateCredsSetupCompleted": true
   },
