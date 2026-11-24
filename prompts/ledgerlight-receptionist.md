@@ -29,6 +29,7 @@ Before the call ends, make sure you have:
 - Email address, spelled back to confirm
 - What they need help with
 - Whether they're a new or existing client
+- Repeat the phone number back digit by digit to confirm it.
 Ask for these naturally over the conversation, one at a time. Don't read them off like a form.
 
 ## Booking
