@@ -48,10 +48,11 @@ workflows/
 |---|---|---|
 | `workflows/ledgerlight/knowledge-lookup.json` | Webhook the voice agent calls to answer questions from the knowledge base (OpenAI agent + Supabase vector store, header auth) | Working |
 | `workflows/ledgerlight/kb-ingest.json` | Upload form that splits a Markdown knowledge base on its headings and loads it into Supabase with OpenAI embeddings | Working |
+| `workflows/ledgerlight/check-availability.json` | Webhook the voice agent calls with a date and appointment length. Reads Google Calendar and returns up to 3 open slots within office hours, with a spoken version of each time | Working |
 | `workflows/shared/revops-subagent.json` | Reusable across clients and the outbound sales agent. Turns a plain-text lead into structured JSON, then creates the organization, person, lead and note in Pipedrive | Working |
 | `workflows/shared/prospecting-subagent.json` | Finds 5 prospects for a query with Firecrawl search and Hunter, returning structured, sourced leads. Never guesses emails | Working |
 | `workflows/shared/sdr-subagent.json` | Reads people from Pipedrive and drafts a pitch email for each in Gmail. Drafts only, a person reviews and sends | Working |
-| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message, the `knowledge_lookup` and `end_call` tools, and the 7 data collection fields read after each call | Working |
+| `elevenlabs/ledgerlight-receptionist.json` | Full ElevenLabs agent config: voice, model, first message, the `knowledge_lookup`, `check_availability` and `end_call` tools, and the 7 data collection fields read after each call | Working |
 | `workflows/experiments/` | Earlier voice experiments: ElevenLabs calling n8n, and n8n replying with ElevenLabs text-to-speech | Reference |
 | `prompts/` | System prompts and output schemas, kept as files so changes show up as readable diffs | |
 | `knowledge-base/ledgerlight.md` | Knowledge base for Ledgerlight Tax & Advisory, the fictional CPA firm used in the demo | Loaded |
@@ -63,7 +64,7 @@ workflows/
 - [x] RevOps subagent writing leads to Pipedrive
 - [x] Header auth on the knowledge lookup webhook
 - [ ] Header auth on every other webhook
-- [ ] `check_availability` (Google Calendar)
+- [x] `check_availability` (Google Calendar)
 - [ ] `book_appointment`
 - [ ] `log_lead` wired to the RevOps subagent
 - [ ] `notify_owner` for hot leads
@@ -88,6 +89,7 @@ The ingestion workflow and the lookup workflow must use the **same OpenAI embedd
 - **Agent tools vs. a fixed workflow.** The first version of the RevOps subagent gave the agent four Pipedrive tools. It sometimes skipped them and returned JSON straight away, because the output parser offered an easier way to finish. Moving the Pipedrive steps out of the agent and into a fixed sequence of nodes (organization, then person, then lead, then note) made every run create all four records. The agent now does only what models are good at: turning messy text into structure.
 - **Disabled nodes pass data through.** An organization ID kept coming back `undefined` because the Pipedrive nodes were still switched off from testing. A disabled n8n node hands its input along unchanged, so the next node never saw an `id`.
 - **Deleting a person in Pipedrive can take their lead with it.** I thought lead creation was broken. It had worked; I had deleted the test person afterwards.
+- **Check which version is live.** Three bugs this week had the same root cause. n8n test URLs (`/webhook-test/`) only answer right after you click Execute, so a voice tool pointed at one fails on every real call. ElevenLabs keeps agent edits in a draft until you publish, so two config exports came back blank. Edits to a published n8n workflow don't reach the production URL until you republish. In each case the fix came from the logs: the tool call showed which URL it actually hit.
 - **ElevenLabs Voice Library voices need a paid plan through the API.** On the free tier, a Library voice returns `402 Payment Required`. Default voices work.
 
 ## Security notes

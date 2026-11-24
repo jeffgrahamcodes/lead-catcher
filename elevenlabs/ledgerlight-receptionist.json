@@ -266,6 +266,78 @@
             "follow_redirects_allowed_domains": []
           },
           {
+            "type": "webhook",
+            "name": "check_availability",
+            "description": "Checks open appointment times on one specific date. Call this whenever a caller wants to book or asks when there are openings. Only offer times this tool returns.",
+            "response_timeout_secs": 59,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": true,
+            "pre_tool_speech": "force",
+            "assignments": [],
+            "tool_call_sound": "typing",
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "dynamic_variables": {
+              "dynamic_variable_placeholders": {}
+            },
+            "execution_mode": "immediate",
+            "api_schema": {
+              "request_headers": {
+                "x-api-key": {
+                  "secret_id": "YOUR_ELEVENLABS_SECRET_ID"
+                }
+              },
+              "kind": "webhook",
+              "url": "https://YOUR-N8N-HOST/webhook/check-availability",
+              "method": "POST",
+              "path_params_schema": {},
+              "query_params_schema": null,
+              "request_body_schema": {
+                "description": "The date and appointment length to check for open times on Ledgerlight's calendar.",
+                "dynamic_variable": "",
+                "is_omitted": false,
+                "type": "object",
+                "required": [
+                  "date",
+                  "duration_minutes"
+                ],
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "description": "The single day the caller wants to come in, in YYYY-MM-DD format. Work it out from today's date in Eastern time: \"tomorrow\", \"next Thursday\" or \"the 3rd\" all become a real date like 2026-11-24. If the caller hasn't named a day yet, ask them before calling this tool. Never send a range or more than one date.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "duration_minutes": {
+                    "type": "string",
+                    "description": "How long the appointment is, in minutes, based on what the caller needs: 15 for a free intro call, 30 for an IRS notice review, 45 for bookkeeping onboarding, and 60 for a tax prep intake meeting, a tax planning consultation, or anything else. If unsure, use 60.",
+                    "enum": null,
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values": null,
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  }
+                }
+              },
+              "response_body_schema": null,
+              "response_filter": null,
+              "content_type": "application/json",
+              "auth_resolved_params": [],
+              "auth_connection": null,
+              "mtls_auth_connection": null
+            },
+            "follow_redirects": false,
+            "follow_redirects_allowed_domains": []
+          },
+          {
             "type": "system",
             "name": "end_call",
             "description": "End the call only after you've confirmed any next step and thanked the caller, or when the caller clearly says goodbye.",

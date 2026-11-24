@@ -1,0 +1,130 @@
+{
+  "name": "Ledgerlight: Check Availability",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check-availability",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1e7e66fb-eedc-40ae-8769-acc2f624fbfb",
+      "name": "Webhook",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Ledgerlight Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Ledgerlight"
+        },
+        "returnAll": true,
+        "timeMin": "={{ DateTime.fromISO($json.body.date, { zone: 'America/New_York' }).startOf('day').toISO() }}",
+        "timeMax": "={{ DateTime.fromISO($json.body.date, { zone: 'America/New_York' }).endOf('day').toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "08b943d2-aaf8-4c1c-b8f1-b994ae1b4a53",
+      "name": "Get many events",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ledgerlight office hours (Eastern). Mon=1 ... Sat=6. Sunday closed.\nconst ZONE = 'America/New_York';\nconst HOURS = { 1: [9, 17], 2: [9, 17], 3: [9, 17], 4: [9, 17], 5: [9, 17], 6: [9, 13] };\nconst STEP = 30;        // minutes between possible start times\nconst MAX_SLOTS = 3;    // how many options to return\n\nconst body = $('Webhook').first().json.body || {};\nconst duration = Number(body.duration_minutes) || 60;\nconst day = DateTime.fromISO(body.date || '', { zone: ZONE });\n\nif (!day.isValid) {\n  return [{ json: { available: false, message: 'I need a specific date to check. What day works for you?', slots: [] } }];\n}\n\nconst hours = HOURS[day.weekday];\nif (!hours) {\n  return [{ json: { available: false, message: `We're closed on ${day.toFormat('cccc')}s.`, slots: [] } }];\n}\n\n// Existing events from Google Calendar (all-day events block the whole day)\nconst busy = $input.all()\n  .map(i => i.json)\n  .filter(e => e.start)\n  .map(e => ({\n    start: DateTime.fromISO(e.start.dateTime || e.start.date, { zone: ZONE }),\n    end: DateTime.fromISO(e.end.dateTime || e.end.date, { zone: ZONE }),\n  }));\n\nconst now = DateTime.now().setZone(ZONE);\nconst close = day.set({ hour: hours[1], minute: 0, second: 0, millisecond: 0 });\nlet cursor = day.set({ hour: hours[0], minute: 0, second: 0, millisecond: 0 });\nconst slots = [];\n\nwhile (cursor.plus({ minutes: duration }) <= close && slots.length < MAX_SLOTS) {\n  const end = cursor.plus({ minutes: duration });\n  const clash = busy.some(b => cursor < b.end && end > b.start);\n  if (!clash && cursor > now) {\n    slots.push({\n      start: cursor.toISO(),\n      spoken: cursor.toFormat(\"cccc, LLLL d 'at' h:mm a\"),\n    });\n  }\n  cursor = cursor.plus({ minutes: STEP });\n}\n\nreturn [{ json: {\n  available: slots.length > 0,\n  message: slots.length\n    ? 'Open times found.'\n    : `Nothing is open on ${day.toFormat('cccc, LLLL d')}. Would another day work?`,\n  slots,\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "676ec9d7-5bba-4129-af2f-a97bbde18e35",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "d02be714-c63a-4c86-ba18-7142b6ab2f09",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
