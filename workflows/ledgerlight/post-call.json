@@ -18,7 +18,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json.body.data;\nconst dc = d.analysis?.data_collection_results || {};\nconst entries = Object.entries(dc);\n\nconst IDS = {\n  caller_name: 'aitem_4201m836704tefashfa0fwv6ybea',\n  caller_phone: 'aitem_9301m8367p5sf8dafvxpcv0czbxm',\n  caller_email: 'aitem_1601m8368a8eefz9ad31r9pzgnkn',\n  reason: 'aitem_8801m8368zykfbhs7ys935nfqkmz',\n  new_client: 'aitem_3201m8369w6fe9ermhb0tp5d6d1d',\n  booked: 'aitem_4901m836ahhsevev7sg6sjcs3nky',\n  urgent: 'aitem_9801m836b6b3fkxahdcvpgq7b2rz',\n  wants_callback: 'aitem_7701m87tm593f068bntvswafyjnx',\n};\n\nconst find = k =>\n  dc[k] ?? dc[IDS[k]] ??\n  entries.find(([id, e]) =>\n    [e?.data_collection_id, e?.name, e?.identifier].includes(k) ||\n    [e?.data_collection_id, e?.name, e?.identifier].includes(IDS[k]))?.[1];\n\nconst val = k => find(k)?.value ?? null;\nconst bool = k => [true, 'true'].includes(val(k));\n\nconst callerId = d.conversation_initiation_client_data?.dynamic_variables?.system__caller_id || '';\n\nconst transcript = (d.transcript || [])\n  .filter(t => t.message)\n  .map(t => `${t.role === 'agent' ? 'Sarah' : 'Caller'}: ${t.message}`)\n  .join('\\n');\n\nconst name = val('caller_name') || '';\nconst phone = val('caller_phone') || callerId;\nconst urgent = bool('urgent');\nconst wants_callback = bool('wants_callback');\nconst booked = bool('booked');\nconst new_client = bool('new_client');\n\nreturn [{ json: {\n  conversation_id: d.conversation_id,\n  duration_secs: d.metadata?.call_duration_secs ?? 0,\n  name, phone,\n  email: val('caller_email') || '',\n  reason: val('reason') || '',\n  new_client, booked, urgent, wants_callback,\n  hot: urgent || wants_callback || (new_client && !booked),\n  real_caller: Boolean(name || phone),\n  transcript,\n}}];"
+        "jsCode": "const d = $input.first().json.body.data;\nconst dc = d.analysis?.data_collection_results || {};\nconst entries = Object.entries(dc);\n\n// ElevenLabs keys data_collection_results by each field's ID.\n// These IDs are specific to this agent; swap in your own from the agent export\n// (platform_settings.data_collection). They aren't secrets.\nconst IDS = {\n  caller_name: 'aitem_4201m836704tefashfa0fwv6ybea',\n  caller_phone: 'aitem_9301m8367p5sf8dafvxpcv0czbxm',\n  caller_email: 'aitem_1601m8368a8eefz9ad31r9pzgnkn',\n  reason: 'aitem_8801m8368zykfbhs7ys935nfqkmz',\n  new_client: 'aitem_3201m8369w6fe9ermhb0tp5d6d1d',\n  booked: 'aitem_4901m836ahhsevev7sg6sjcs3nky',\n  urgent: 'aitem_9801m836b6b3fkxahdcvpgq7b2rz',\n  wants_callback: 'aitem_7701m87tm593f068bntvswafyjnx',\n};\n\nconst find = k => {\n  const id = IDS[k];\n  return dc[k] ?? (id && dc[id]) ??\n    entries.find(([, e]) => {\n      const keys = [e?.data_collection_id, e?.name].filter(Boolean);\n      return keys.includes(k) || (id && keys.includes(id));\n    })?.[1];\n};\n\nconst val = k => find(k)?.value ?? null;\nconst bool = k => [true, 'true'].includes(val(k));\n\nconst callerId = d.conversation_initiation_client_data?.dynamic_variables?.system__caller_id || '';\n\nconst transcript = (d.transcript || [])\n  .filter(t => t.message)\n  .map(t => `${t.role === 'agent' ? 'Sarah' : 'Caller'}: ${t.message}`)\n  .join('\\n');\n\nconst name = val('caller_name') || '';\nconst phone = val('caller_phone') || callerId;\nconst urgent = bool('urgent');\nconst wants_callback = bool('wants_callback');\nconst booked = bool('booked');\nconst new_client = bool('new_client');\n\nreturn [{ json: {\n  conversation_id: d.conversation_id,\n  duration_secs: d.metadata?.call_duration_secs ?? 0,\n  cost: d.metadata?.cost ?? 0,\n  name, phone,\n  email: val('caller_email') || '',\n  reason: val('reason') || '',\n  new_client, booked, urgent, wants_callback,\n  hot: urgent || wants_callback || (new_client && !booked),\n  real_caller: Boolean(name || phone),\n  transcript,\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -101,7 +101,7 @@
       "name": "Message a model",
       "credentials": {
         "openAiApi": {
-          "id": "",
+          "id": null,
           "name": "",
           "__aiGatewayManaged": true
         }
@@ -228,9 +228,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "l38MUDh5E2icwx33",
+          "value": "YOUR_NOTIFY_OWNER_WORKFLOW_ID",
           "mode": "list",
-          "cachedResultUrl": "/workflow/l38MUDh5E2icwx33",
+          "cachedResultUrl": "/workflow/YOUR_NOTIFY_OWNER_WORKFLOW_ID",
           "cachedResultName": "Ledgerlight: Notify Owner"
         },
         "workflowInputs": {
@@ -362,7 +362,9 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "summary": "={{ $('Message a model').item.json.output[0].content[0].text }}",
             "timestamp": "={{ $now.setZone('America/New_York').toISO() }}",
+            "hot": "={{ $('Code in JavaScript').item.json.hot }}",
             "conversation_id": "={{ $('Code in JavaScript').item.json.conversation_id }}",
             "name": "={{ $('Code in JavaScript').item.json.name }}",
             "phone": "={{ $('Code in JavaScript').item.json.phone }}",
@@ -372,9 +374,7 @@
             "booked": "={{ $('Code in JavaScript').item.json.booked }}",
             "urgent": "={{ $('Code in JavaScript').item.json.urgent }}",
             "wants_callback": "={{ $('Code in JavaScript').item.json.wants_callback }}",
-            "hot": "={{ $('Code in JavaScript').item.json.hot }}",
-            "duration_secs": "={{ $('Code in JavaScript').item.json.duration_secs }}",
-            "summary": "={{ $('Message a model').item.json.output[0].content[0].text }}"
+            "duration_secs": "={{ $('Code in JavaScript').item.json.duration_secs }}"
           },
           "matchingColumns": [],
           "schema": [
