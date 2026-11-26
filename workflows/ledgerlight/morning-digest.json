@@ -1,0 +1,146 @@
+{
+  "name": "Ledgerlight: Morning Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1-6"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "173cfca4-6427-41b6-a2e2-65c1287292f6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Ledgerlight Call Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "09df24fc-f3bf-4225-804f-3ab901477429",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = DateTime.now().setZone('America/New_York');\n// Monday covers everything since Saturday's digest\nconst since = now.minus({ hours: now.weekday === 1 ? 48 : 24 });\nconst yes = v => v === true || String(v).toLowerCase() === 'true';\n\nconst calls = $input.all().map(i => i.json)\n  .filter(r => r.timestamp && DateTime.fromISO(r.timestamp) >= since);\n\nconst line = r => `- ${r.name || 'Unknown caller'}, ${r.phone || 'no number'}: ${r.summary}`;\nconst urgent = calls.filter(r => yes(r.urgent));\nconst callback = calls.filter(r => !yes(r.urgent) && (yes(r.wants_callback) || (yes(r.new_client) && !yes(r.booked))));\nconst booked = calls.filter(r => yes(r.booked));\nconst other = calls.filter(r => !urgent.includes(r) && !callback.includes(r) && !booked.includes(r));\n\nconst section = (title, list) => list.length ? `${title} (${list.length})\\n${list.map(line).join('\\n')}\\n\\n` : '';\n\nconst body = calls.length === 0\n  ? 'Good morning. No calls came in overnight.'\n  : `Good morning. Sarah took ${calls.length} call${calls.length === 1 ? '' : 's'} since ${since.toFormat(\"cccc h:mm a\")}.\\n\\n`\n    + section('URGENT: IRS DEADLINE', urgent)\n    + section('CALL BACK TODAY', callback)\n    + section('BOOKED', booked)\n    + section('OTHER CALLS', other)\n    + 'Full notes are on each lead in Pipedrive.';\n\nreturn [{ json: {\n  subject: `Overnight calls: ${calls.length} (${urgent.length + callback.length} need a callback)`,\n  body,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "cf723cbb-23b8-4b6b-973f-f343619e169e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "owner@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "a5299f2b-5016-422f-a5d4-063d95e39b2d",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "America/New_York",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

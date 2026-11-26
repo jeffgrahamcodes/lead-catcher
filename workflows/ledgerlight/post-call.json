@@ -101,7 +101,7 @@
       "name": "Message a model",
       "credentials": {
         "openAiApi": {
-          "id": null,
+          "id": "",
           "name": "",
           "__aiGatewayManaged": true
         }
@@ -139,7 +139,7 @@
       "name": "Create a person",
       "credentials": {
         "pipedriveApi": {
-          "id": "mYiIOEiqJnBWlZK2",
+          "id": "",
           "name": "Pipedrive account 3"
         }
       }
@@ -162,7 +162,7 @@
       "name": "Create a lead",
       "credentials": {
         "pipedriveApi": {
-          "id": "mYiIOEiqJnBWlZK2",
+          "id": "",
           "name": "Pipedrive account 3"
         }
       }
@@ -185,7 +185,7 @@
       "name": "Create a note",
       "credentials": {
         "pipedriveApi": {
-          "id": "mYiIOEiqJnBWlZK2",
+          "id": "",
           "name": "Pipedrive account 3"
         }
       }
@@ -218,7 +218,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        1712,
+        1936,
         -96
       ],
       "id": "45048379-b911-4521-ac84-5a6f486c52c8",
@@ -336,11 +336,198 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.4,
       "position": [
-        1936,
+        2160,
         -192
       ],
       "id": "6f8548e1-dab9-4b44-bc02-38f836e71a78",
       "name": "Call 'Ledgerlight: Notify Owner'"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Ledgerlight Call Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.setZone('America/New_York').toISO() }}",
+            "conversation_id": "={{ $('Code in JavaScript').item.json.conversation_id }}",
+            "name": "={{ $('Code in JavaScript').item.json.name }}",
+            "phone": "={{ $('Code in JavaScript').item.json.phone }}",
+            "email": "={{ $('Code in JavaScript').item.json.email }}",
+            "reason": "={{ $('Code in JavaScript').item.json.reason }}",
+            "new_client": "={{ $('Code in JavaScript').item.json.new_client }}",
+            "booked": "={{ $('Code in JavaScript').item.json.booked }}",
+            "urgent": "={{ $('Code in JavaScript').item.json.urgent }}",
+            "wants_callback": "={{ $('Code in JavaScript').item.json.wants_callback }}",
+            "hot": "={{ $('Code in JavaScript').item.json.hot }}",
+            "duration_secs": "={{ $('Code in JavaScript').item.json.duration_secs }}",
+            "summary": "={{ $('Message a model').item.json.output[0].content[0].text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "new_client",
+              "displayName": "new_client",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "booked",
+              "displayName": "booked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "urgent",
+              "displayName": "urgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "wants_callback",
+              "displayName": "wants_callback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hot",
+              "displayName": "hot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "duration_secs",
+              "displayName": "duration_secs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1712,
+        -96
+      ],
+      "id": "6e861076-4cc2-4bde-ab50-506f33846bee",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -415,7 +602,7 @@
       "main": [
         [
           {
-            "node": "If1",
+            "node": "Append row in sheet",
             "type": "main",
             "index": 0
           }
@@ -432,6 +619,17 @@
           }
         ]
       ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -439,11 +637,9 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "1f178bbd-b674-4372-bab1-5c879811371c",
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
-  "id": "PKwEFZDRRe2eOvRi",
   "tags": []
 }
