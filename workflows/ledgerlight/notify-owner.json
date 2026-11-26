@@ -62,31 +62,15 @@
       ],
       "id": "0c1d9942-ad73-4e48-8025-31b3de69b75b",
       "name": "Send a message",
-      "webhookId": "57da7a55-3bcb-43b9-a723-1e639482ed9e",
       "credentials": {
         "gmailOAuth2": {
-          "id": "x9hWZiDqGZxBO5OO",
+          "id": "",
           "name": "Gmail account"
         }
       }
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "name": "Dana Whitfield",
-          "phone": "202-555-0147",
-          "email": "dana.whitfield@example.com",
-          "reason": "Needs help responding to an IRS letter due Friday",
-          "summary": "Dana Whitfield got an IRS letter with a Friday deadline and isn't a client yet. She wants a callback. Next step: call her first thing tomorrow.",
-          "urgent": false,
-          "wants_callback": false,
-          "booked": false
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -105,11 +89,9 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "20491373-3304-4327-b2ff-ad3d92cbf96d",
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
-  "id": "l38MUDh5E2icwx33",
   "tags": []
 }
