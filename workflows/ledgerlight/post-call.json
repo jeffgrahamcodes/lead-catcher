@@ -18,7 +18,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json.body.data;\nconst dc = d.analysis?.data_collection_results || {};\nconst entries = Object.entries(dc);\n\n// ElevenLabs keys data_collection_results by each field's ID.\n// These IDs are specific to this agent; swap in your own from the agent export\n// (platform_settings.data_collection). They aren't secrets.\nconst IDS = {\n  caller_name: 'aitem_4201m836704tefashfa0fwv6ybea',\n  caller_phone: 'aitem_9301m8367p5sf8dafvxpcv0czbxm',\n  caller_email: 'aitem_1601m8368a8eefz9ad31r9pzgnkn',\n  reason: 'aitem_8801m8368zykfbhs7ys935nfqkmz',\n  new_client: 'aitem_3201m8369w6fe9ermhb0tp5d6d1d',\n  booked: 'aitem_4901m836ahhsevev7sg6sjcs3nky',\n  urgent: 'aitem_9801m836b6b3fkxahdcvpgq7b2rz',\n  wants_callback: 'aitem_7701m87tm593f068bntvswafyjnx',\n};\n\nconst find = k => {\n  const id = IDS[k];\n  return dc[k] ?? (id && dc[id]) ??\n    entries.find(([, e]) => {\n      const keys = [e?.data_collection_id, e?.name].filter(Boolean);\n      return keys.includes(k) || (id && keys.includes(id));\n    })?.[1];\n};\n\nconst val = k => find(k)?.value ?? null;\nconst bool = k => [true, 'true'].includes(val(k));\n\nconst callerId = d.conversation_initiation_client_data?.dynamic_variables?.system__caller_id || '';\n\nconst transcript = (d.transcript || [])\n  .filter(t => t.message)\n  .map(t => `${t.role === 'agent' ? 'Sarah' : 'Caller'}: ${t.message}`)\n  .join('\\n');\n\nconst name = val('caller_name') || '';\nconst phone = val('caller_phone') || callerId;\nconst urgent = bool('urgent');\nconst wants_callback = bool('wants_callback');\nconst booked = bool('booked');\nconst new_client = bool('new_client');\n\nreturn [{ json: {\n  conversation_id: d.conversation_id,\n  duration_secs: d.metadata?.call_duration_secs ?? 0,\n  cost: d.metadata?.cost ?? 0,\n  name, phone,\n  email: val('caller_email') || '',\n  reason: val('reason') || '',\n  new_client, booked, urgent, wants_callback,\n  hot: urgent || wants_callback || (new_client && !booked),\n  real_caller: Boolean(name || phone),\n  transcript,\n}}];"
+        "jsCode": "const d = $input.first().json.body.data;\nconst dc = d.analysis?.data_collection_results || {};\nconst entries = Object.entries(dc);\n\n// ElevenLabs keys data_collection_results by each field's ID.\n// These IDs are specific to this agent; swap in your own from the agent export\n// (platform_settings.data_collection). They aren't secrets.\nconst IDS = {\n  caller_name: 'aitem_4201m836704tefashfa0fwv6ybea',\n  caller_phone: 'aitem_9301m8367p5sf8dafvxpcv0czbxm',\n  caller_email: 'aitem_1601m8368a8eefz9ad31r9pzgnkn',\n  reason: 'aitem_8801m8368zykfbhs7ys935nfqkmz',\n  new_client: 'aitem_3201m8369w6fe9ermhb0tp5d6d1d',\n  booked: 'aitem_4901m836ahhsevev7sg6sjcs3nky',\n  urgent: 'aitem_9801m836b6b3fkxahdcvpgq7b2rz',\n  wants_callback: 'aitem_7701m87tm593f068bntvswafyjnx',\n};\n\nconst find = k => {\n  const id = IDS[k];\n  return dc[k] ?? (id && dc[id]) ??\n    entries.find(([, e]) => {\n      const keys = [e?.data_collection_id, e?.name].filter(Boolean);\n      return keys.includes(k) || (id && keys.includes(id));\n    })?.[1];\n};\n\nconst val = k => find(k)?.value ?? null;\nconst bool = k => [true, 'true'].includes(val(k));\n\nconst callerId = d.conversation_initiation_client_data?.dynamic_variables?.system__caller_id || '';\n\nconst turns = d.transcript || [];\n\nconst transcript = turns\n  .filter(t => t.message)\n  .map(t => `${t.role === 'agent' ? 'Sarah' : 'Caller'}: ${t.message}`)\n  .join('\\n');\n\n// Latency: how long Sarah took to start talking after the caller stopped\nconst resp = turns\n  .map(t => t.conversation_turn_metrics?.metrics?.convai_ttf_audio_since_silence?.elapsed_time)\n  .filter(x => typeof x === 'number');\n\n// Tool latency as ElevenLabs saw it (includes network time), skipping end_call\nconst toolLat = turns\n  .flatMap(t => t.tool_results || [])\n  .filter(r => r.type !== 'system')\n  .map(r => r.tool_latency_secs)\n  .filter(x => typeof x === 'number');\n\n// Sarah's LLM tokens for the whole call\nconst usage = Object.values(d.metadata?.charging?.llm_usage?.initiated_generation?.model_usage || {})[0] || {};\nconst tok = k => usage[k]?.tokens || 0;\nconst round = x => Math.round(x * 100) / 100;\n\nconst name = val('caller_name') || '';\nconst phone = val('caller_phone') || callerId;\nconst urgent = bool('urgent');\nconst wants_callback = bool('wants_callback');\nconst booked = bool('booked');\nconst new_client = bool('new_client');\n\nreturn [{ json: {\n  conversation_id: d.conversation_id,\n  duration_secs: d.metadata?.call_duration_secs ?? 0,\n  cost: d.metadata?.cost ?? 0,\n  cost_usd: round(d.metadata?.cost_fiat ?? 0),\n  avg_response_secs: resp.length ? round(resp.reduce((a, b) => a + b, 0) / resp.length) : null,\n  max_response_secs: resp.length ? round(Math.max(...resp)) : null,\n  slowest_tool_secs: toolLat.length ? round(Math.max(...toolLat)) : null,\n  llm_tokens: tok('input') + tok('input_cache_read') + tok('input_cache_write') + tok('output_total'),\n  name, phone,\n  email: val('caller_email') || '',\n  reason: val('reason') || '',\n  new_client, booked, urgent, wants_callback,\n  hot: urgent || wants_callback || (new_client && !booked),\n  real_caller: Boolean(name || phone),\n  transcript,\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -374,7 +374,13 @@
             "booked": "={{ $('Code in JavaScript').item.json.booked }}",
             "urgent": "={{ $('Code in JavaScript').item.json.urgent }}",
             "wants_callback": "={{ $('Code in JavaScript').item.json.wants_callback }}",
-            "duration_secs": "={{ $('Code in JavaScript').item.json.duration_secs }}"
+            "duration_secs": "={{ $('Code in JavaScript').item.json.duration_secs }}",
+            "cost": "={{ $('Code in JavaScript').item.json.cost }}",
+            "cost_usd": "={{ $('Code in JavaScript').item.json.cost_usd }}",
+            "avg_response_secs": "={{ $('Code in JavaScript').item.json.avg_response_secs }}",
+            "max_response_secs": "={{ $('Code in JavaScript').item.json.max_response_secs }}",
+            "llm_tokens": "={{ $('Code in JavaScript').item.json.llm_tokens }}",
+            "slowest_tool_secs": "={{ $('Code in JavaScript').item.json.slowest_tool_secs }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -491,6 +497,66 @@
             {
               "id": "duration_secs",
               "displayName": "duration_secs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cost",
+              "displayName": "cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_response_secs",
+              "displayName": "avg_response_secs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_response_secs",
+              "displayName": "max_response_secs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "llm_tokens",
+              "displayName": "llm_tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "slowest_tool_secs",
+              "displayName": "slowest_tool_secs",
               "required": false,
               "defaultMatch": false,
               "display": true,
